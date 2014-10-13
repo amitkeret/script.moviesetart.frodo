@@ -1,7 +1,7 @@
 import urllib, urllib2, json
 import xbmc, xbmcaddon
 
-from database import ARTWORK_TYPE_POSTER, ARTWORK_TYPE_FANART
+from database import Database, ARTWORK_TYPE_POSTER, ARTWORK_TYPE_FANART
 from dialog import dialog_msg
 from log import log
 
@@ -11,6 +11,7 @@ __language__  = __addon__.getLocalizedString
 apiurl = 'http://api.themoviedb.org/3/'
 apikey = '4be68d7eab1fbd1b6fd8a3b80a65a95e'
 apiconfig = None
+DB = Database()
 
 def _download_getjson( url, params=(), queryparams={} ):
   url = apiurl + url % params + '?' + _download_format_query(queryparams)
@@ -34,6 +35,11 @@ def _download_format_query( queryparams ):
 
 def download( movieset ):
   log( 'downloader: Searching for collection: ' + movieset['label'] )
+  movies = DB.getMoviesInSet( movieset[ ['setid']] )
+  if len(movies) > 1:
+    log( 'downloader: Only one movie in set, skipping.' )
+    return 0
+
   baseurl = _download_base_url()
   artwork = {}
 
