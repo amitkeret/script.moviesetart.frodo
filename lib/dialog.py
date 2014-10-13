@@ -15,8 +15,9 @@ def dialog_msg(action,
                line2 = '',
                line3 = '',
                nolabel = __language__(32005),
-               yeslabel = __language__(32004)):
-    # Fix possible unicode errors
+               yeslabel = __language__(32004),
+               selectlist = []):
+    # Fix possible unicode errors 
     heading = heading.encode( 'utf-8', 'ignore' )
     line1 = line1.encode( 'utf-8', 'ignore' )
     line2 = line2.encode( 'utf-8', 'ignore' )
@@ -47,3 +48,5 @@ def dialog_msg(action,
         xbmcgui.Dialog().ok(heading, line1, line2, line3)
     if action == 'yesno':
         return xbmcgui.Dialog().yesno(heading, line1, line2, line3, nolabel, yeslabel)
+    if action == 'select':
+        return xbmcgui.Dialog().select(heading, selectlist)

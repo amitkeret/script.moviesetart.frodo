@@ -2,9 +2,11 @@ import urllib, urllib2, json
 import xbmc, xbmcaddon
 
 from database import ARTWORK_TYPE_POSTER, ARTWORK_TYPE_FANART
+from dialog import dialog_msg
 from log import log
 
 __addon__     = xbmcaddon.Addon( "script.moviesetart" )
+__language__  = __addon__.getLocalizedString
 
 apiurl = 'http://api.themoviedb.org/3/'
 apikey = '4be68d7eab1fbd1b6fd8a3b80a65a95e'
@@ -36,15 +38,24 @@ def download( movieset ):
   artwork = {}
 
   search = _download_getjson( 'search/collection', queryparams={'query': movieset['label']} )
-  if search['total_results'] == 1:
+  if search['total_results'] > 1:
+    # multiple matches, let the user choose
+    select = []
+    for result in search['results']:
+      select.append( result['name'] )
+    selected = dialog_msg('select', __language__(32028), selectlist=select)
+    data = search['results'][selected]
+  elif search['total_results'] == 1:
+    # only one match - simple
     data = search['results'][0]
-    if data['poster_path']:
-      artwork[ARTWORK_TYPE_POSTER] = baseurl + data['poster_path']
-    if data['backdrop_path']:
-      artwork[ARTWORK_TYPE_FANART] = baseurl + data['backdrop_path']
   else:
     log( 'downloader: Error while matching collection: ' + movieset['label'] )
     return 0
+
+  if data['poster_path']:
+    artwork[ARTWORK_TYPE_POSTER] = baseurl + data['poster_path']
+  if data['backdrop_path']:
+    artwork[ARTWORK_TYPE_FANART] = baseurl + data['backdrop_path']
 
   if bool(artwork):
     for artwork_type, artwork_link in artwork.items():
