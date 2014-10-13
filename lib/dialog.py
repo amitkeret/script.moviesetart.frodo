@@ -16,7 +16,7 @@ def dialog_msg(action,
                line3 = '',
                nolabel = __language__(32005),
                yeslabel = __language__(32004)):
-    # Fix possible unicode errors 
+    # Fix possible unicode errors
     heading = heading.encode( 'utf-8', 'ignore' )
     line1 = line1.encode( 'utf-8', 'ignore' )
     line2 = line2.encode( 'utf-8', 'ignore' )

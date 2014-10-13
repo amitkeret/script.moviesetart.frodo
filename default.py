@@ -8,7 +8,7 @@ from xbmcvfs import exists as vfs_exists
 from xbmcvfs import listdir as vfs_listdir
 from traceback import print_exc
 from urllib import unquote
-    
+
 from lib.log import log
 from lib.dialog import dialog_msg
 from lib.file_item import Thumbnails
@@ -52,10 +52,10 @@ def join_path ( base, name ):
         return "%s/%s" % (base, name)
     else:
         return os.path.join(base, name)
-    
+
 def get_lenient_name ( name ):
     return re.sub("[^a-zA-Z0-9.]", "", name.lower(), 0)
-    
+
 def find_images_lenient ( file_map, base, recurse ):
     log( "Looking for artwork in %s" % base )
     dirs, files = vfs_listdir(base)
@@ -108,7 +108,7 @@ def copy_artwork( source_path, dest_path ):
 
     log( "Source Path: %s" % repr( source_path ), xbmc.LOGDEBUG )
     log( "Destination Path: %s" % repr( dest_path ), xbmc.LOGDEBUG )
-    
+
     if not file_exists( source_path ):
         log( "Source file does not exist", xbmc.LOGDEBUG )
     elif not file_copy( source_path, dest_path ):
@@ -120,13 +120,13 @@ def update_movie_set(percent, movieset, art_type, filename):
                 line2 = " %s %s" % ( __language__( 32007 ), movieset[ "label" ] ), \
                 line3 = filename )
     return DB.updateDatabase(movieset[ "setid" ], filename, art_type, enable_force_update)
-        
+
 # Method to update all the movie set artwork
 def update_movie_sets(overwrite = False):
     log( "Updating artwork for Movie Sets", xbmc.LOGNOTICE )
     dialog_msg( "create" )
-    found_artwork_count = 0    
-    db_update_count = 0    
+    found_artwork_count = 0
+    db_update_count = 0
 
     # Map of artwork types and their corresponding possible filenames
     artwork_type_filenames = {}
@@ -136,38 +136,38 @@ def update_movie_sets(overwrite = False):
     artwork_type_filenames[ARTWORK_TYPE_LOGO] = setting_logo_filenames
     artwork_type_filenames[ARTWORK_TYPE_CLEARART] = setting_clearart_filenames
     artwork_type_filenames[ARTWORK_TYPE_BANNER] = setting_banner_filenames
-            
+
     # Get movie sets
     movie_sets = DB.getMovieSets()
-    
+
     if len( movie_sets ) == 0:
         dialog_msg( "okdialog", line1 = __language__(32011) )
         return found_artwork_count, db_update_count
 
-    # Find all images in the artwork folder, mapped by lenient filenames used for matching  
+    # Find all images in the artwork folder, mapped by lenient filenames used for matching
     file_map = {}
     if ( enable_artwork_folder and artwork_folder_path != ""):
         find_images_lenient(file_map, artwork_folder_path, recurse_artwork_folder)
         log( "Artwork folder image map: %s" % file_map )
-            
+
     for countset, movieset in enumerate( movie_sets ):
         try:
             if dialog_msg( "iscanceled" ):
                 break
             movieset_name = movieset[ "label" ]
-            percent = int( ( countset/float( len( movie_sets ) ) ) * 100 ) 
+            percent = int( ( countset/float( len( movie_sets ) ) ) * 100 )
             dialog_msg( "update", percent = percent, line1 = __language__( 32006 ), \
                         line2 = " %s %s" % ( __language__( 32007 ), movieset_name ) )
             # This sleep isn't needed, just makes UI nicer
             xbmc.sleep( 100 )
-            
+
             log( "------------------------------------------------------------", xbmc.LOGDEBUG )
             log( "Processing movie set: %s" % movieset_name,              xbmc.LOGDEBUG)
             log( "------------------------------------------------------------", xbmc.LOGDEBUG )
-            
+
             # The cache path is no longer correct in Gotham. Need fix or to lookup textures.db
             # videodb://1/7/ -> videodb://movies/sets/
-             
+
             #set_thumb = TBN.get_cached_saga_thumb( movieset[ "setid" ], False )
             #log( "Cached thumb filename: %s" % set_thumb, xbmc.LOGDEBUG )
             #set_fanart = TBN.get_cached_saga_thumb( movieset[ "setid" ], True )
@@ -181,9 +181,9 @@ def update_movie_sets(overwrite = False):
             artwork_found = {}
             for artwork_type in artwork_type_filenames:
                 artwork_found[artwork_type] = []
-                
+
             if ( enable_artwork_folder and artwork_folder_path != ""):
-                
+
                 # Check if there is artwork in the search folder matching all the supported artwork types
                 log( "== Checking single artwork folder ==", xbmc.LOGDEBUG )
                 for artwork_type in artwork_type_filenames:
@@ -196,16 +196,16 @@ def update_movie_sets(overwrite = False):
                             db_update_count += update_movie_set(percent, movieset, artwork_type, artwork_filename)
                             artwork_types_copied.append(artwork_type)
                             break
-                    
+
                 # If we found all artwork types, we can move on
                 log( "Found artwork for %s types" % len(artwork_types_copied) )
                 if ( len(artwork_types_copied) == len(artwork_type_filenames) ):
                     continue
-                
+
             if ( enable_search_folders ):
                 movie_folders = []
                 movie_folder_names = []
-                
+
                 # Scan the movies in the set and their folders
                 log( "== Scanning movies in set for folder names and artwork ==", xbmc.LOGDEBUG )
                 movies = DB.getMoviesInSet( movieset[ "setid" ])
@@ -215,14 +215,14 @@ def update_movie_sets(overwrite = False):
                                     line2 = " %s %s" % ( __language__( 32007 ), movieset_name ), \
                                     line3 = " %s %s" % ( __language__( 32010 ), movie[ "title" ] ) )
                         log( "Processing movie: %s" % movie[ "title" ], xbmc.LOGDEBUG )
-                
+
                         movie_folder = os.path.dirname( movie[ "file" ] )
                         movie_folders.append(movie_folder)
                         movie_folder_names.append(os.path.basename(movie_folder))
-                        
+
                         # Check for artwork in the parent folder of the movie folder
                         parent_folder = os.path.dirname( movie_folder )
-                        
+
                         # Remember all artwork found during scan of movies in the set
                         for artwork_type in artwork_type_filenames:
                             if (not artwork_type in artwork_types_copied):
@@ -231,7 +231,7 @@ def update_movie_sets(overwrite = False):
                                     if file_exists( artwork_filename ):
                                         artwork_found[artwork_type].append(artwork_filename)
                                         break
-                            
+
                     except:
                         xbmc.log( "enumerate( movies ): %s" % repr( movie ), xbmc.LOGERROR )
                         print_exc()
@@ -242,7 +242,7 @@ def update_movie_sets(overwrite = False):
                     log( "== All movies in the set have the same folder name ==", xbmc.LOGDEBUG)
                     for movie_folder in ordered_set(movie_folders):
                         log( "Checking folder for artwork: %s" % movie_folder, xbmc.LOGDEBUG)
-                        # Ignore artwork found during scan and look in the single folder                        
+                        # Ignore artwork found during scan and look in the single folder
                         for artwork_type in artwork_type_filenames:
                             if (not artwork_type in artwork_types_copied):
                                 for artwork_filename in artwork_type_filenames[artwork_type]:
@@ -252,7 +252,7 @@ def update_movie_sets(overwrite = False):
                                         db_update_count += update_movie_set(percent, movieset, artwork_type, artwork_filename)
                                         artwork_types_copied.append(artwork_type)
                                         break
-                                    
+
                 # Else movies are in different folders
                 else:
                     # Use the most popular artwork amongst movies in the set
@@ -265,7 +265,7 @@ def update_movie_sets(overwrite = False):
                                 artwork_filename = max( set(artwork), key=artwork.count )
                                 db_update_count += update_movie_set(percent, movieset, artwork_type, artwork_filename)
                                 artwork_types_copied.append(artwork_type)
-                            
+
         except:
             xbmc.log( "enumerate( movie_sets ): %s" % repr( movieset ), xbmc.LOGERROR )
             print_exc()
@@ -277,16 +277,16 @@ def update_movie_sets(overwrite = False):
             if ( len(artwork_found_no_empty) > 0 ):
                 found_artwork_count += 1
 
-            
+
     # dialog_msg( "update", percent = 100, line1 = __language__( 32009 ) )
     # xbmc.sleep( 1000 )
     dialog_msg( "close" )
     return found_artwork_count, db_update_count
-    
+
 if ( __name__ == "__main__" ):
-    
+
     xbmc.executebuiltin('Dialog.Close(all, true)')
-    
+
     log( "############################################################", xbmc.LOGNOTICE )
     log( "#    %-50s    #" % __scriptname__, xbmc.LOGNOTICE )
     log( "#    %-50s    #" % __scriptID__, xbmc.LOGNOTICE )
@@ -308,9 +308,9 @@ if ( __name__ == "__main__" ):
     log( "Logo filenames: %s" % setting_logo_filenames, xbmc.LOGDEBUG )
     log( "Clearart filenames: %s" % setting_clearart_filenames, xbmc.LOGDEBUG )
     log( "Banner filenames: %s" % setting_banner_filenames, xbmc.LOGDEBUG )
-    
+
     try:
-        xbmc.executebuiltin('Dialog.Close(all, true)') 
+        xbmc.executebuiltin('Dialog.Close(all, true)')
         xbmc.sleep( 1000 )
 
         # Check the XBMC version to determine DB or JSON
@@ -327,10 +327,10 @@ if ( __name__ == "__main__" ):
         if ( not useSQL and not xbmc.getCondVisibility( "System.GetBool(services.esenabled)" ) ):
             dialog_msg( "okdialog", line1 = __language__(32014) )
             xbmc.executebuiltin( "ActivateWindow(servicesettings)" )
-                    
+
         elif (not (enable_artwork_folder or enable_search_folders) ):
             dialog_msg( "okdialog", line1 = __language__(32012) )
-            
+
         else:
             # In Frodo, there is always artwork for movie sets, so no overwrite means no point running
             overwrite = dialog_msg( "yesno", line1 = __language__(32008) )
@@ -343,5 +343,5 @@ if ( __name__ == "__main__" ):
         dialog_msg( "okdialog", line1 = str(sys.exc_info()[0]), \
                     line2 = str(sys.exc_info()[1]) )
         raise
-    
-    xbmc.executebuiltin('Dialog.Close(all, true)') 
+
+    xbmc.executebuiltin('Dialog.Close(all, true)')
